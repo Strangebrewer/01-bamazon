@@ -29,14 +29,11 @@ Mock Storefront CLI program with three levels of interaction with a MySQL databa
   Customer view shows making purchases and then exiting the program:
   ![Customer View Gif](Demo-GIFs/bamazonCustomerView.gif)
 
-  Manager View shows manager checking inventory, checking low inventory, adding inventory, and adding a new item to the database:
+  Manager View shows manager checking inventory, checking low inventory, adding inventory, adding a new item to the database, and checking inventory again:
   ![Manager View Gif](Demo-GIFs/bamazonManagerView.gif)
 
   Supervisor View shows the supervisor checking profits by department, and adding a new department name to the database:
   ![Supervisor View Gif](Demo-GIFs/bamazonSupervisorView.gif)
-
-  Supervisor creating a new department name:
-  ![Supervisor View - New Department](Demo-GIFs/bamazonSupervisorViewNewDept.gif)
 
   Manager creating a new item in the new department the supervisor just created:
   ![Manager View - New Item in New Department](Demo-GIFs/bamazonManagerViewNewDept.gif)
