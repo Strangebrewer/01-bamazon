@@ -48,7 +48,6 @@ This project is an exercise in reading and manipulating a MySQL database via Nod
   
   Manager View - choosing 'Not Listed' from department listing for new item results in error message:
   ![Manager new item](Demo-images/not-listed.png)
-  ![Have sup add Dept](Demo-images/add-dept.png)
 
   Manager View - Attempting to add an item that already exists results in an error message:
   ![Manager add existing item](Demo-images/item-already-exists.png)
