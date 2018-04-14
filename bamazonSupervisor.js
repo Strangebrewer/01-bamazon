@@ -48,7 +48,7 @@ function viewSalesByDept() {
     var table = new Table({
       head: [
         "Dept ID".bold,
-        "Dept Name".bold,
+        "Department Name".bold,
         "Overhead".bold,
         "Sales".bold,
         "Total Profit".bold
@@ -61,7 +61,7 @@ function viewSalesByDept() {
 
     for (let i = 0; i < res.length; i++) {
       const element = res[i];
-      
+
       if (element.total_profit < 0) {
         table.push([
           element.department_id,
@@ -103,18 +103,43 @@ function createNewDept() {
     }
   ])
     .then(function (response) {
-      var insert = "INSERT INTO departments (department_name, over_head_costs) VALUES (?, ?)";
-      connection.query(insert, [
-        response.NewDept,
-        response.DeptOverhead
-      ], function (err, res) {
-        if (err) throw err;
-        console.log("\n-----------------------".yellow);
-        console.log("New department created.".cyan);
-        console.log("-----------------------".yellow);
-        newSprAction();
-      });
+      checkForDupDept(response);
     });
+}
+
+function checkForDupDept(response) {
+  var query = "SELECT department_name FROM departments";
+  var existingDepartments = [];
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+    for (let i = 0; i < res.length; i++) {
+      const element = res[i];
+      existingDepartments.push(element.department_name.toLowerCase());
+    }
+    if (existingDepartments.includes(response.NewDept.toLowerCase())) {
+      console.log("\n-----------------------------------------------".yellow);
+      console.log("That department already exists in the database.".red);
+      console.log("-----------------------------------------------".yellow);
+      newSprAction();
+    }
+    else {
+      insertNewDept(response);
+    }
+  });
+}
+
+function insertNewDept(response) {
+  var insert = "INSERT INTO departments (department_name, over_head_costs) VALUES (?, ?)";
+  connection.query(insert, [
+    response.NewDept,
+    response.DeptOverhead
+  ], function (err, res) {
+    if (err) throw err;
+    console.log("\n-----------------------".yellow);
+    console.log("New department created.".cyan);
+    console.log("-----------------------".yellow);
+    newSprAction();
+  });
 }
 
 //  ask if they'd like to perform another action

@@ -69,7 +69,7 @@ function checkNewDept() {
       .then(function (response) {
         if (response.NewDept === "Not listed") {
           console.log("\n--------------------------------------------".yellow);
-          console.log("Have your supervisor add the new department\nname to the database before you add this item.".red);
+          console.log("Have your supervisor add the new department\n  name to the database before you add this item.".red);
           console.log("--------------------------------------------".yellow);
 
           newMgrAction();
@@ -101,20 +101,45 @@ function addNewProduct(dept) {
     }
   ])
     .then(function (response) {
-      var insert = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?)";
-      connection.query(insert, [
-        response.NewItem,
-        dept,
-        response.NewPrice,
-        response.NewQty
-      ], function (err, res) {
-        if (err) throw err;
-        console.log("\n--------------------".yellow);
-        console.log("New product created.".cyan);
-        console.log("--------------------".yellow);
-        newMgrAction();
-      });
+      checkForDupItems(response, dept);
     });
+}
+
+function checkForDupItems(response, dept) {
+  var query = "SELECT product_name FROM products";
+  var existingItems = [];
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+    for (let i = 0; i < res.length; i++) {
+      const element = res[i];
+      existingItems.push(element.product_name.toLowerCase())
+    }
+    if (existingItems.includes(response.NewItem.toLowerCase())) {
+      console.log("\n-----------------------------------------".yellow);
+      console.log("That item already exists in the database.".red);
+      console.log("-----------------------------------------".yellow);
+      newMgrAction();
+    }
+    else {
+      insertNewItem(response, dept);
+    }
+  });
+}
+
+function insertNewItem(response, dept) {
+  var insert = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?)";
+  connection.query(insert, [
+    response.NewItem,
+    dept,
+    response.NewPrice,
+    response.NewQty
+  ], function (err, res) {
+    if (err) throw err;
+    console.log("\n--------------------".yellow);
+    console.log("New product created.".cyan);
+    console.log("--------------------".yellow);
+    newMgrAction();
+  });
 }
 
 function addInventory() {

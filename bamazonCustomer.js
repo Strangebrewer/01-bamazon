@@ -98,7 +98,9 @@ function getInventoryFromDb(response) {
         getPurchasePrice(response);
       }
       else {
-        console.log("Insuffient quantity");
+        console.log("\n--------------------------------------------".yellow);
+        console.log("Inventory too low to complete your purchase.".red);
+        console.log("--------------------------------------------".yellow);
         buyAgain();
       }
     }
