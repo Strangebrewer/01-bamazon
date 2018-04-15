@@ -52,17 +52,18 @@ function checkNewDept() {
   var query = "SELECT department_name FROM departments";
   connection.query(query, function (err, res) {
     if (err) throw err;
-    var departments = ["Not listed"];
-    for (let i = 0; i < res.length; i++) {
-      const element = res[i];
-      departments.unshift(element.department_name);
-    }
     console.log("");
     inquirer.prompt([
       {
         type: "list",
         message: "What department will the new item belong to?",
-        choices: departments,
+        choices: function () {
+          let departmentsArray = ["Not listed"];
+          for (let i = 0; i < res.length; i++) {
+            departmentsArray.unshift(res[i].department_name);
+          }
+          return departmentsArray;
+        },
         name: "NewDept"
       }
     ])
@@ -81,7 +82,7 @@ function checkNewDept() {
   });
 }
 
-function addNewProduct(dept) {
+function addNewProduct(newDeptStr) {
   console.log("");
   inquirer.prompt([
     {
@@ -101,38 +102,33 @@ function addNewProduct(dept) {
     }
   ])
     .then(function (response) {
-      checkForDupItems(response, dept);
+      checkForDupItems(response, newDeptStr);
     });
 }
 
-function checkForDupItems(response, dept) {
-  var query = "SELECT product_name FROM products";
-  var existingItems = [];
-  connection.query(query, function (err, res) {
+function checkForDupItems(resObj, newDeptStr) {
+  var query = "SELECT product_name FROM products WHERE product_name =?";
+  connection.query(query, resObj.NewItem, function (err, res) {
     if (err) throw err;
-    for (let i = 0; i < res.length; i++) {
-      const element = res[i];
-      existingItems.push(element.product_name.toLowerCase())
-    }
-    if (existingItems.includes(response.NewItem.toLowerCase())) {
+    if (res.length > 0) {
       console.log("\n-----------------------------------------".yellow);
       console.log("That item already exists in the database.".red);
       console.log("-----------------------------------------".yellow);
       newMgrAction();
     }
     else {
-      insertNewItem(response, dept);
+      insertNewItem(resObj, newDeptStr);
     }
   });
 }
 
-function insertNewItem(response, dept) {
+function insertNewItem(resObj, newDeptStr) {
   var insert = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?)";
   connection.query(insert, [
-    response.NewItem,
-    dept,
-    response.NewPrice,
-    response.NewQty
+    resObj.NewItem,
+    newDeptStr,
+    resObj.NewPrice,
+    resObj.NewQty
   ], function (err, res) {
     if (err) throw err;
     console.log("\n--------------------".yellow);

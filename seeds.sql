@@ -12,3 +12,6 @@ SELECT bamazon.departments.department_id, bamazon.departments.department_name, b
  bamazon.products.department_name=bamazon.departments.department_name GROUP BY department_id;
 
 --  remove 'bamazon.' to make this work since it's already connecting to that database...
+
+--  checking for duplicates
+SELECT DISTINCT department_name FROM departments WHERE department_name = ?;

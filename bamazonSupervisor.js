@@ -103,36 +103,31 @@ function createNewDept() {
     }
   ])
     .then(function (response) {
-      checkForDupDept(response);
+      checkForDupDept(response, response.NewDept);
     });
 }
 
-function checkForDupDept(response) {
-  var query = "SELECT department_name FROM departments";
-  var existingDepartments = [];
-  connection.query(query, function (err, res) {
+function checkForDupDept(responseObject, responseString) {
+  var query = "SELECT DISTINCT department_name FROM departments WHERE department_name = ?";
+  connection.query(query, [responseString], function (err, res) {
     if (err) throw err;
-    for (let i = 0; i < res.length; i++) {
-      const element = res[i];
-      existingDepartments.push(element.department_name.toLowerCase());
-    }
-    if (existingDepartments.includes(response.NewDept.toLowerCase())) {
+    if (res.length > 0) {
       console.log("\n-----------------------------------------------".yellow);
       console.log("That department already exists in the database.".red);
       console.log("-----------------------------------------------".yellow);
       newSprAction();
     }
     else {
-      insertNewDept(response);
+      insertNewDept(responseObject);
     }
   });
 }
 
-function insertNewDept(response) {
+function insertNewDept(resObj) {
   var insert = "INSERT INTO departments (department_name, over_head_costs) VALUES (?, ?)";
   connection.query(insert, [
-    response.NewDept,
-    response.DeptOverhead
+    resObj.NewDept,
+    resObj.DeptOverhead
   ], function (err, res) {
     if (err) throw err;
     console.log("\n-----------------------".yellow);
