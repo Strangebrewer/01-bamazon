@@ -57,6 +57,3 @@ This project is an exercise in reading and manipulating a MySQL database via Nod
 
   Customer View - Insufficient inventory:
   ![Customer orders too many](Demo-images/inv-too-low.png)
-
-  Customer View - enter wrong item ID:
-  ![Item does not exist](Demo-images/invalid-item-id.png)

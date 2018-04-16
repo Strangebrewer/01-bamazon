@@ -11,7 +11,6 @@ var connection = mysql.createConnection({
   database: "bamazon"
 });
 
-//  connect to db and display inventory
 connection.connect(function (err) {
   if (err) throw err;
   supervisorOptions();
@@ -44,7 +43,6 @@ function viewSalesByDept() {
   var query = "SELECT departments.department_id, departments.department_name, departments.over_head_costs, SUM(products.product_sales) AS product_sales, SUM(products.product_sales) - departments.over_head_costs AS total_profit FROM departments JOIN products ON products.department_name=departments.department_name GROUP BY department_id";
   connection.query(query, function (err, res) {
     if (err) throw err;
-
     var table = new Table({
       head: [
         "Dept ID".bold,
@@ -58,10 +56,8 @@ function viewSalesByDept() {
       colAligns: ["center", null, "right", "right", "right"],
       wordWrap: true
     });
-
     for (let i = 0; i < res.length; i++) {
       const element = res[i];
-
       if (element.total_profit < 0) {
         table.push([
           element.department_id,
@@ -95,39 +91,49 @@ function createNewDept() {
       type: "input",
       message: "What will be the name of the new department?",
       name: "NewDept"
-    },
-    {
-      type: "input",
-      message: "What are the overhead costs for the new department?",
-      name: "DeptOverhead"
     }
   ])
     .then(function (response) {
-      checkForDupDept(response, response.NewDept);
+      var newDept = response.NewDept;
+      var query = "SELECT DISTINCT department_name FROM departments WHERE department_name = ?";
+      connection.query(query, [newDept], function (err, res) {
+        if (err) throw err;
+        if (res.length > 0) {
+          console.log("\n-----------------------------------------------".yellow);
+          console.log("That department already exists in the database.".red);
+          console.log("-----------------------------------------------".yellow);
+          newSprAction();
+        }
+        else {
+          newDeptOverhead(newDept);
+        }
+      });
     });
 }
 
-function checkForDupDept(responseObject, responseString) {
-  var query = "SELECT DISTINCT department_name FROM departments WHERE department_name = ?";
-  connection.query(query, [responseString], function (err, res) {
-    if (err) throw err;
-    if (res.length > 0) {
-      console.log("\n-----------------------------------------------".yellow);
-      console.log("That department already exists in the database.".red);
-      console.log("-----------------------------------------------".yellow);
-      newSprAction();
+function newDeptOverhead(str) {
+  console.log("");
+  inquirer.prompt([
+    {
+      type: "input",
+      message: "What are the overhead costs for the new department?",
+      name: "Overhead",
+      validate: function (input) {
+        if (isNaN(input)) return "You must enter a valid number."
+        return true;
+      }
     }
-    else {
-      insertNewDept(responseObject);
-    }
-  });
+  ])
+    .then(function (response) {
+        insertNewDept(response.Overhead, str);
+    });
 }
 
-function insertNewDept(resObj) {
+function insertNewDept(str1, str2) {
   var insert = "INSERT INTO departments (department_name, over_head_costs) VALUES (?, ?)";
   connection.query(insert, [
-    resObj.NewDept,
-    resObj.DeptOverhead
+    str2,
+    str1
   ], function (err, res) {
     if (err) throw err;
     console.log("\n-----------------------".yellow);
@@ -137,7 +143,6 @@ function insertNewDept(resObj) {
   });
 }
 
-//  ask if they'd like to perform another action
 function newSprAction() {
   console.log("");
   inquirer.prompt([

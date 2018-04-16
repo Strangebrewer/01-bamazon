@@ -17,7 +17,6 @@ connection.connect(function (err) {
   readProducts();
 });
 
-//  read the db and display the contents
 function readProducts() {
   connection.query("SELECT * FROM products", function (error, results) {
     if (error) throw error;
@@ -54,92 +53,93 @@ function queryPurchase() {
     }
   ])
     .then(function (response) {
-      if (response.BuyBoolean === true) buyItem();
+      if (response.BuyBoolean === true) makePurchase();
       else connection.end();
     })
 }
 
-//  Ask which item to buy and how many
-function buyItem() {
+function makePurchase() {
   console.log("");
   inquirer.prompt([
     {
       type: "input",
       message: "What is the ID of the item you would like to purchase?",
-      name: "SaleID"
+      name: "SaleID",
+      validate: function (input) {
+        var done = this.async();
+        var query = "SELECT * FROM products WHERE ?";
+        connection.query(query, { item_id: input }, function (err, res) {
+          if (err) throw err;
+          if (res.length === 0) {
+            done("That is not a valid item ID.");
+            return;
+          }
+          done(null, true);
+        });
+      }
     },
     {
       type: "input",
       message: "How many would you like to purchase?",
-      name: "SaleQty"
+      name: "SaleQty",
+      validate: function (input) {
+        if (isNaN(input) || input < 0) return "You must enter a valid number."
+        return true;
+      }
     }
   ])
     .then(function (response) {
-      getInventoryFromDb(response);
+      checkInventory(response.SaleID, response.SaleQty)
     });
 }
 
-//  Get inventory qty from the db
-function getInventoryFromDb(response) {
+function checkInventory(saleId, saleQty) {
   var query = "SELECT * FROM products WHERE ?";
-  connection.query(query, { item_id: response.SaleID }, function (err, res) {
+  connection.query(query, { item_id: saleId }, function (err, res) {
     if (err) throw err;
-    if (res.length === 0) {
-      console.log("\n----------------------------".yellow);
-      console.log("That is not a valid item ID.".red);
-      console.log("----------------------------".yellow);
-      buyItem();
+    var inventory = res[0].stock_quantity;
+    if (inventory >= saleQty) {
+      updateInventory(saleId, saleQty, inventory);
+      getPrice(saleId, saleQty);
     }
     else {
-      var stockQty = res[0].stock_quantity;
-
-      if (stockQty > response.SaleQty) {
-        purchaseUpdateInventory(response, stockQty);
-        getPurchasePrice(response);
-      }
-      else {
-        console.log("\n--------------------------------------------".yellow);
-        console.log("Inventory too low to complete your purchase.".red);
-        console.log("--------------------------------------------".yellow);
-        buyAgain();
-      }
+      console.log("\n--------------------------------------------".yellow);
+      console.log("Inventory too low to complete your purchase.".red);
+      console.log("--------------------------------------------".yellow);
+      buyAgain();
     }
   });
 }
 
-//  subtract purchase qty from inventory qty and update inventory qty
-function purchaseUpdateInventory(response, stockQty) {
+function updateInventory(saleId, saleQty, inventory) {
   var update = "UPDATE products SET stock_quantity = ? WHERE item_id = ?";
-  var newQty = stockQty - response.SaleQty;
-  connection.query(update, [newQty, response.SaleID], function (err, res) {
+  var newQty = inventory - saleQty;
+  connection.query(update, [newQty, saleId], function (err, res) {
     if (err) throw err;
   });
 }
 
-//  get item price from db and display total purchase price
-function getPurchasePrice(response) {
+function getPrice(saleId, saleQty) {
   var queryCost = "SELECT * FROM products WHERE item_id = ?";
-  connection.query(queryCost, response.SaleID, function (err, res) {
+  connection.query(queryCost, saleId, function (err, res) {
     if (err) throw err;
-    var cost = parseFloat(res[0].price * response.SaleQty).toFixed(2);
+    var cost = parseFloat(res[0].price * saleQty).toFixed(2);
     var salesTotal = parseFloat(res[0].product_sales + cost);
     console.log("\n----------------------".yellow);
     console.log(`Your cost is: $${cost}`.cyan);
     console.log("----------------------".yellow);
-    purchaseUpdateSales(response, salesTotal);
+    updateSalesDb(saleId, salesTotal);
     buyAgain();
   });
 }
 
-//  Update total sales in products table
-function purchaseUpdateSales(response, salesTotal) {
+function updateSalesDb(saleId, salesTotal) {
   var updateSale = "UPDATE products SET product_sales = ? WHERE item_id = ?";
-  connection.query(updateSale, [salesTotal, response.SaleID], function (err, res) {
+  connection.query(updateSale, [salesTotal, saleId], function (err, res) {
     if (err) throw err;
   });
 }
 
-//  ask if they'd like to make another purchase
 function buyAgain() {
   console.log("");
   inquirer.prompt([
@@ -150,7 +150,7 @@ function buyAgain() {
     }
   ])
     .then(function (response) {
-      if (response.NextPurchase === true) buyItem();
+      if (response.NextPurchase === true) makePurchase();
       else connection.end();
     })
 }
