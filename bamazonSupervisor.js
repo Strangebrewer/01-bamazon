@@ -40,7 +40,7 @@ function supervisorOptions() {
 }
 
 function viewSalesByDept() {
-  var query = "SELECT departments.department_id, departments.department_name, departments.over_head_costs, SUM(products.product_sales) AS product_sales, SUM(products.product_sales) - departments.over_head_costs AS total_profit FROM departments JOIN products ON products.department_name=departments.department_name GROUP BY department_id";
+  var query = "SELECT departments.department_id, departments.department_name, departments.over_head_costs, COALESCE(SUM(products.product_sales), 0) AS product_sales, COALESCE(SUM(products.product_sales), 0) - departments.over_head_costs AS total_profit FROM departments LEFT JOIN products ON products.department_name = departments.department_name GROUP BY department_id";
   connection.query(query, function (err, res) {
     if (err) throw err;
     var table = new Table({
@@ -56,26 +56,23 @@ function viewSalesByDept() {
       colAligns: ["center", null, "right", "right", "right"],
       wordWrap: true
     });
+
     for (let i = 0; i < res.length; i++) {
       const element = res[i];
+      var profit;
       if (element.total_profit < 0) {
+        profit = `$${parseFloat(element.total_profit).toFixed(2)}`.red;
+      }
+      else if (element.total_profit > 0 ) {
+        profit = `$${parseFloat(element.total_profit).toFixed(2)}`.green;
+      }
         table.push([
           element.department_id,
           element.department_name,
           `$${parseFloat(element.over_head_costs).toFixed(2)}`,
           `$${parseFloat(element.product_sales).toFixed(2)}`,
-          `$${parseFloat(element.total_profit).toFixed(2)}`.red
+          profit
         ]);
-      }
-      else {
-        table.push([
-          element.department_id,
-          element.department_name,
-          `$${parseFloat(element.over_head_costs).toFixed(2)}`,
-          `$${parseFloat(element.product_sales).toFixed(2)}`,
-          `$${parseFloat(element.total_profit).toFixed(2)}`.green
-        ]);
-      }
     }
 
     console.log(table.toString());
