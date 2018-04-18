@@ -59,20 +59,19 @@ function viewSalesByDept() {
 
     for (let i = 0; i < res.length; i++) {
       const element = res[i];
-      var profit;
       if (element.total_profit < 0) {
-        profit = `$${parseFloat(element.total_profit).toFixed(2)}`.red;
+        var profit = `$${parseFloat(element.total_profit).toFixed(2)}`.red;
       }
-      else if (element.total_profit > 0 ) {
-        profit = `$${parseFloat(element.total_profit).toFixed(2)}`.green;
+      else if (element.total_profit > 0) {
+        var profit = `$${parseFloat(element.total_profit).toFixed(2)}`.green;
       }
-        table.push([
-          element.department_id,
-          element.department_name,
-          `$${parseFloat(element.over_head_costs).toFixed(2)}`,
-          `$${parseFloat(element.product_sales).toFixed(2)}`,
-          profit
-        ]);
+      table.push([
+        element.department_id,
+        element.department_name,
+        `$${parseFloat(element.over_head_costs).toFixed(2)}`,
+        `$${parseFloat(element.product_sales).toFixed(2)}`,
+        profit
+      ]);
     }
 
     console.log(table.toString());
@@ -122,7 +121,7 @@ function newDeptOverhead(str) {
     }
   ])
     .then(function (response) {
-        insertNewDept(response.Overhead, str);
+      insertNewDept(response.Overhead, str);
     });
 }
 
