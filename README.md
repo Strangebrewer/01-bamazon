@@ -9,7 +9,7 @@
 
 ---
 ### 1-Description :page\_facing\_up:
-Mock Storefront CLI application with three levels of interaction with a MySQL database. There is the Customer interface for buying, the Manager interface for managing inventory, and the Supervisor interface for viewing total profits and adding new product categories.
+Bootcamp assignment number 14 (or so). A Mock Storefront CLI application with three levels of interaction with a MySQL database. There is the Customer interface for buying, the Manager interface for managing inventory, and the Supervisor interface for viewing total profits and adding new product categories.
 
 ---
 ### 2-Technologies  :computer:
